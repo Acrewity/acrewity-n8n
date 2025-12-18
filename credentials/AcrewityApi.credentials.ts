@@ -47,7 +47,7 @@ export class AcrewityApi implements ICredentialType {
 				service: 'uuid_generator',
 				operation: 'generate_uuid',
 				parameters: {
-					version: 4,
+					version: 'v4',
 					count: 1,
 				},
 			},
