@@ -1,6 +1,6 @@
 {
   "name": "@acrewity/n8n-nodes-acrewity",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "n8n community node for Acrewity API - A unified API platform with 20+ utility services including PDF processing, data conversion, QR codes, and more",
   "license": "MIT",
   "homepage": "https://acrewity.com",

@@ -78,10 +78,10 @@ export class Acrewity implements INodeType {
 				type: 'options',
 				displayOptions: { show: { resource: ['uuid_generator'] } },
 				options: [
-					{ name: 'Version 1 (Time-Based)', value: 1 },
-					{ name: 'Version 4 (Random)', value: 4 },
+					{ name: 'Version 1 (Time-Based)', value: 'v1' },
+					{ name: 'Version 4 (Random)', value: 'v4' },
 				],
-				default: 4,
+				default: 'v4',
 				description: 'The UUID version to generate',
 			},
 			{
@@ -810,7 +810,7 @@ export class Acrewity implements INodeType {
 
 				// UUID Generator
 				if (resource === 'uuid_generator') {
-					parameters.version = this.getNodeParameter('version', i) as number;
+					parameters.version = this.getNodeParameter('version', i) as string;
 					parameters.count = this.getNodeParameter('count', i) as number;
 				}
 
