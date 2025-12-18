@@ -40,9 +40,7 @@ export class AcrewityApi implements ICredentialType {
 			baseURL: 'https://www.acrewity.com',
 			url: '/api/services/execute',
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			json: true,
 			body: {
 				service: 'uuid_generator',
 				operation: 'generate_uuid',
