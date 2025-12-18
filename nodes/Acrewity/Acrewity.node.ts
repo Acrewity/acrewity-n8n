@@ -513,6 +513,7 @@ export class Acrewity implements INodeType {
 					{ name: 'JPEG', value: 'jpeg' },
 					{ name: 'PNG', value: 'png' },
 					{ name: 'WebP', value: 'webp' },
+					{ name: 'ICO', value: 'ico' },
 				],
 				default: 'jpeg',
 			},
@@ -520,10 +521,28 @@ export class Acrewity implements INodeType {
 				displayName: 'Quality',
 				name: 'quality',
 				type: 'number',
-				displayOptions: { show: { resource: ['image_converter'] } },
+				displayOptions: { show: { resource: ['image_converter'], format: ['jpeg', 'png', 'webp'] } },
 				default: 85,
 				typeOptions: { minValue: 1, maxValue: 100 },
-				description: 'Output quality (1-100)',
+				description: 'Output quality (1-100). Does not apply to ICO format.',
+			},
+			{
+				displayName: 'Width',
+				name: 'width',
+				type: 'number',
+				displayOptions: { show: { resource: ['image_converter'] } },
+				default: 0,
+				typeOptions: { minValue: 0 },
+				description: 'Output width in pixels (0 = keep original)',
+			},
+			{
+				displayName: 'Height',
+				name: 'height',
+				type: 'number',
+				displayOptions: { show: { resource: ['image_converter'] } },
+				default: 0,
+				typeOptions: { minValue: 0 },
+				description: 'Output height in pixels (0 = keep original)',
 			},
 
 			// ============ Excel to JSON ============
@@ -1002,7 +1021,18 @@ export class Acrewity implements INodeType {
 				if (resource === 'image_converter') {
 					parameters.imageUrl = this.getNodeParameter('imageUrl', i) as string;
 					parameters.format = this.getNodeParameter('format', i) as string;
-					parameters.quality = this.getNodeParameter('quality', i) as number;
+					// Quality only applies to non-ICO formats
+					if (parameters.format !== 'ico') {
+						parameters.quality = this.getNodeParameter('quality', i) as number;
+					}
+					const width = this.getNodeParameter('width', i) as number;
+					const height = this.getNodeParameter('height', i) as number;
+					if (width > 0) {
+						parameters.width = width;
+					}
+					if (height > 0) {
+						parameters.height = height;
+					}
 				}
 
 				// Excel to JSON
