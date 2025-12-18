@@ -24,3 +24,9 @@ coverage/
 # Environment
 .env
 .env.local
+
+# Temp files
+temp/
+
+# Claude Code
+.claude/
