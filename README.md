@@ -44,13 +44,13 @@ This node provides access to all Acrewity API services:
 
 1. Go to **Settings** > **Community Nodes**
 2. Select **Install**
-3. Enter `n8n-nodes-acrewity`
+3. Enter `@acrewity/n8n-nodes-acrewity`
 4. Click **Install**
 
 ### Manual Installation
 
 ```bash
-npm install n8n-nodes-acrewity
+npm install @acrewity/n8n-nodes-acrewity
 ```
 
 ## Credentials
@@ -99,7 +99,7 @@ Each API operation costs **1 credit**. Check your credit balance in the Acrewity
 ## Support
 
 - **Documentation**: [acrewity.com/docs](https://acrewity.com/docs)
-- **Issues**: [GitHub Issues](https://github.com/acrewity/n8n-nodes-acrewity/issues)
+- **Issues**: [GitHub Issues](https://github.com/Acrewity/n8n-nodes-acrewity/issues)
 - **Contact**: [acrewity.com/contact](https://acrewity.com/contact)
 
 ## License

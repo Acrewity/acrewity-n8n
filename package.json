@@ -1,9 +1,12 @@
 {
-  "name": "n8n-nodes-acrewity",
+  "name": "@acrewity/n8n-nodes-acrewity",
   "version": "0.1.0",
   "description": "n8n community node for Acrewity API - A unified API platform with 20+ utility services including PDF processing, data conversion, QR codes, and more",
   "license": "MIT",
   "homepage": "https://acrewity.com",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "n8n-community-node-package",
     "n8n",
@@ -23,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/acrewity/n8n-nodes-acrewity.git"
+    "url": "https://github.com/Acrewity/n8n-nodes-acrewity.git"
   },
   "scripts": {
     "build": "n8n-node build",
