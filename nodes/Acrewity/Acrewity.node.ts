@@ -42,7 +42,7 @@ export class Acrewity implements INodeType {
 					{ name: 'HTML to PDF', value: 'html_to_pdf', description: 'Convert HTML to PDF documents' },
 					{ name: 'Image Converter', value: 'image_converter', description: 'Convert images between formats' },
 					{ name: 'JSON Schema Validator', value: 'json_schema_validator', description: 'Validate JSON against schemas' },
-					{ name: 'JSON to Excel', value: 'excel_editor', description: 'Convert JSON to Excel files' },
+					{ name: 'JSON to Excel', value: 'json_to_excel', description: 'Convert JSON to Excel files' },
 					{ name: 'Markdown Table', value: 'markdown_table_generator', description: 'Generate Markdown tables' },
 					{ name: 'Markdown to HTML', value: 'markdown_to_html', description: 'Convert Markdown to HTML' },
 					{ name: 'PDF Extract Page', value: 'pdf_extract_page', description: 'Extract pages from PDFs' },
@@ -267,9 +267,9 @@ export class Acrewity implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['qr_code_generator'] } },
 				options: [
-					{ name: 'Generate QR Code', value: 'generate_qr', action: 'Generate a QR code' },
+					{ name: 'Generate QR Code', value: 'generate', action: 'Generate a QR code' },
 				],
-				default: 'generate_qr',
+				default: 'generate',
 			},
 			{
 				displayName: 'Text/URL',
@@ -397,9 +397,9 @@ export class Acrewity implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['html_to_pdf'] } },
 				options: [
-					{ name: 'Convert to PDF', value: 'convert_pdf', action: 'Convert HTML to PDF' },
+					{ name: 'Convert to PDF', value: 'convert', action: 'Convert HTML to PDF' },
 				],
-				default: 'convert_pdf',
+				default: 'convert',
 			},
 			{
 				displayName: 'HTML Content',
@@ -491,9 +491,9 @@ export class Acrewity implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['image_converter'] } },
 				options: [
-					{ name: 'Convert Image', value: 'convert_image', action: 'Convert image format' },
+					{ name: 'Convert Image', value: 'convert', action: 'Convert image format' },
 				],
-				default: 'convert_image',
+				default: 'convert',
 			},
 			{
 				displayName: 'Image URL',
@@ -534,9 +534,12 @@ export class Acrewity implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['excel_to_json'] } },
 				options: [
-					{ name: 'Convert to JSON', value: 'convert', action: 'Convert excel to json' },
+					{ name: 'List Sheets', value: 'list_sheets', action: 'List all sheet names in excel file' },
+					{ name: 'Read Excel', value: 'read_excel', action: 'Read entire excel file' },
+					{ name: 'Read Sheet', value: 'read_sheet', action: 'Read specific sheet from excel file' },
+					{ name: 'Get Range', value: 'get_range', action: 'Get specific cell range from excel sheet' },
 				],
-				default: 'convert',
+				default: 'read_excel',
 			},
 			{
 				displayName: 'Excel File (Base64)',
@@ -552,9 +555,26 @@ export class Acrewity implements INodeType {
 				displayName: 'Sheet Name',
 				name: 'sheetName',
 				type: 'string',
-				displayOptions: { show: { resource: ['excel_to_json'] } },
+				displayOptions: { show: { resource: ['excel_to_json'], operation: ['read_sheet', 'get_range'] } },
 				default: 'Sheet1',
-				description: 'Name of the sheet to convert',
+				description: 'Name of the sheet to read',
+			},
+			{
+				displayName: 'Cell Range',
+				name: 'range',
+				type: 'string',
+				displayOptions: { show: { resource: ['excel_to_json'], operation: ['get_range'] } },
+				default: 'A1:C10',
+				required: true,
+				description: 'Cell range in A1 notation (e.g., "A1:C10", "B2", "A:A" for entire column)',
+			},
+			{
+				displayName: 'Include Detected Tables',
+				name: 'includeDetectedTables',
+				type: 'boolean',
+				displayOptions: { show: { resource: ['excel_to_json'], operation: ['read_excel', 'read_sheet'] } },
+				default: true,
+				description: 'Whether to include intelligently detected tables in output',
 			},
 
 			// ============ JSON to Excel ============
@@ -563,7 +583,7 @@ export class Acrewity implements INodeType {
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
-				displayOptions: { show: { resource: ['excel_editor'] } },
+				displayOptions: { show: { resource: ['json_to_excel'] } },
 				options: [
 					{ name: 'Create Excel', value: 'create_excel', action: 'Create excel from json' },
 				],
@@ -574,7 +594,7 @@ export class Acrewity implements INodeType {
 				name: 'data',
 				type: 'string',
 				typeOptions: { rows: 6 },
-				displayOptions: { show: { resource: ['excel_editor'] } },
+				displayOptions: { show: { resource: ['json_to_excel'] } },
 				default: '[{"Name": "John", "Email": "john@example.com"}]',
 				required: true,
 				description: 'JSON array of objects to convert to Excel',
@@ -583,7 +603,7 @@ export class Acrewity implements INodeType {
 				displayName: 'Sheet Name',
 				name: 'sheetName',
 				type: 'string',
-				displayOptions: { show: { resource: ['excel_editor'] } },
+				displayOptions: { show: { resource: ['json_to_excel'] } },
 				default: 'Sheet1',
 				description: 'Name of the Excel sheet',
 			},
@@ -596,29 +616,19 @@ export class Acrewity implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['pdf_merge'] } },
 				options: [
-					{ name: 'Merge PDFs', value: 'merge', action: 'Merge two PDF files' },
+					{ name: 'Merge PDFs', value: 'merge', action: 'Merge multiple PDF files' },
 				],
 				default: 'merge',
 			},
 			{
-				displayName: 'Source PDF (Base64)',
-				name: 'source_pdf',
+				displayName: 'PDF Files (JSON Array)',
+				name: 'files',
 				type: 'string',
-				typeOptions: { rows: 4 },
+				typeOptions: { rows: 6 },
 				displayOptions: { show: { resource: ['pdf_merge'] } },
-				default: '',
+				default: '[]',
 				required: true,
-				description: 'First PDF file (Base64 encoded)',
-			},
-			{
-				displayName: 'Target PDF (Base64)',
-				name: 'target_pdf',
-				type: 'string',
-				typeOptions: { rows: 4 },
-				displayOptions: { show: { resource: ['pdf_merge'] } },
-				default: '',
-				required: true,
-				description: 'Second PDF file to append (Base64 encoded)',
+				description: 'JSON array of Base64-encoded PDF files to merge (e.g., ["base64data1", "base64data2"])',
 			},
 
 			// ============ PDF Extract Page ============
@@ -716,15 +726,19 @@ export class Acrewity implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['email_access'] } },
 				options: [
-					{ name: 'Send Email', value: 'send_email', action: 'Send an email' },
+					{ name: 'Send Email', value: 'send_email', action: 'Send an email via SMTP' },
+					{ name: 'Fetch Emails (IMAP)', value: 'fetch_emails', action: 'Fetch emails from IMAP server' },
+					{ name: 'Fetch Emails (POP3)', value: 'fetch_emails_pop3', action: 'Fetch emails from POP3 server' },
+					{ name: 'Mark as Read', value: 'mark_as_read', action: 'Mark email as read via IMAP' },
 				],
 				default: 'send_email',
 			},
+			// Send Email fields
 			{
 				displayName: 'To',
 				name: 'to',
 				type: 'string',
-				displayOptions: { show: { resource: ['email_access'] } },
+				displayOptions: { show: { resource: ['email_access'], operation: ['send_email'] } },
 				default: '',
 				required: true,
 				description: 'Recipient email address',
@@ -733,7 +747,7 @@ export class Acrewity implements INodeType {
 				displayName: 'Subject',
 				name: 'subject',
 				type: 'string',
-				displayOptions: { show: { resource: ['email_access'] } },
+				displayOptions: { show: { resource: ['email_access'], operation: ['send_email'] } },
 				default: '',
 				required: true,
 				description: 'Email subject',
@@ -743,7 +757,7 @@ export class Acrewity implements INodeType {
 				name: 'text',
 				type: 'string',
 				typeOptions: { rows: 4 },
-				displayOptions: { show: { resource: ['email_access'] } },
+				displayOptions: { show: { resource: ['email_access'], operation: ['send_email'] } },
 				default: '',
 				description: 'Plain text email body',
 			},
@@ -751,7 +765,7 @@ export class Acrewity implements INodeType {
 				displayName: 'SMTP Host',
 				name: 'smtp_host',
 				type: 'string',
-				displayOptions: { show: { resource: ['email_access'] } },
+				displayOptions: { show: { resource: ['email_access'], operation: ['send_email'] } },
 				default: '',
 				required: true,
 				placeholder: 'smtp.example.com',
@@ -761,7 +775,7 @@ export class Acrewity implements INodeType {
 				displayName: 'SMTP Port',
 				name: 'smtp_port',
 				type: 'number',
-				displayOptions: { show: { resource: ['email_access'] } },
+				displayOptions: { show: { resource: ['email_access'], operation: ['send_email'] } },
 				default: 587,
 				description: 'SMTP server port',
 			},
@@ -769,7 +783,7 @@ export class Acrewity implements INodeType {
 				displayName: 'SMTP User',
 				name: 'smtp_user',
 				type: 'string',
-				displayOptions: { show: { resource: ['email_access'] } },
+				displayOptions: { show: { resource: ['email_access'], operation: ['send_email'] } },
 				default: '',
 				required: true,
 				description: 'SMTP username/email',
@@ -779,7 +793,7 @@ export class Acrewity implements INodeType {
 				name: 'smtp_pass',
 				type: 'string',
 				typeOptions: { password: true },
-				displayOptions: { show: { resource: ['email_access'] } },
+				displayOptions: { show: { resource: ['email_access'], operation: ['send_email'] } },
 				default: '',
 				required: true,
 			},
@@ -787,10 +801,110 @@ export class Acrewity implements INodeType {
 				displayName: 'From Email',
 				name: 'from',
 				type: 'string',
-				displayOptions: { show: { resource: ['email_access'] } },
+				displayOptions: { show: { resource: ['email_access'], operation: ['send_email'] } },
 				default: '',
 				required: true,
 				description: 'Sender email address',
+			},
+			// IMAP fields (fetch_emails, mark_as_read)
+			{
+				displayName: 'IMAP Host',
+				name: 'imap_host',
+				type: 'string',
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails', 'mark_as_read'] } },
+				default: '',
+				required: true,
+				placeholder: 'imap.example.com',
+				description: 'IMAP server hostname',
+			},
+			{
+				displayName: 'IMAP Port',
+				name: 'imap_port',
+				type: 'number',
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails', 'mark_as_read'] } },
+				default: 993,
+				description: 'IMAP server port',
+			},
+			{
+				displayName: 'IMAP User',
+				name: 'imap_user',
+				type: 'string',
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails', 'mark_as_read'] } },
+				default: '',
+				required: true,
+				description: 'IMAP username/email',
+			},
+			{
+				displayName: 'IMAP Password',
+				name: 'imap_pass',
+				type: 'string',
+				typeOptions: { password: true },
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails', 'mark_as_read'] } },
+				default: '',
+				required: true,
+			},
+			{
+				displayName: 'Folder',
+				name: 'folder',
+				type: 'string',
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails'] } },
+				default: 'INBOX',
+				description: 'IMAP folder to read from',
+			},
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails', 'fetch_emails_pop3'] } },
+				default: 50,
+				typeOptions: { minValue: 1, maxValue: 100 },
+				description: 'Max number of results to return',
+			},
+			{
+				displayName: 'Email UID',
+				name: 'email_uid',
+				type: 'string',
+				displayOptions: { show: { resource: ['email_access'], operation: ['mark_as_read'] } },
+				default: '',
+				required: true,
+				description: 'UID of the email to mark as read',
+			},
+			// POP3 fields
+			{
+				displayName: 'POP3 Host',
+				name: 'pop3_host',
+				type: 'string',
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails_pop3'] } },
+				default: '',
+				required: true,
+				placeholder: 'pop.example.com',
+				description: 'POP3 server hostname',
+			},
+			{
+				displayName: 'POP3 Port',
+				name: 'pop3_port',
+				type: 'number',
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails_pop3'] } },
+				default: 995,
+				description: 'POP3 server port',
+			},
+			{
+				displayName: 'POP3 User',
+				name: 'pop3_user',
+				type: 'string',
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails_pop3'] } },
+				default: '',
+				required: true,
+				description: 'POP3 username/email',
+			},
+			{
+				displayName: 'POP3 Password',
+				name: 'pop3_pass',
+				type: 'string',
+				typeOptions: { password: true },
+				displayOptions: { show: { resource: ['email_access'], operation: ['fetch_emails_pop3'] } },
+				default: '',
+				required: true,
 			},
 		],
 	};
@@ -894,19 +1008,26 @@ export class Acrewity implements INodeType {
 				// Excel to JSON
 				if (resource === 'excel_to_json') {
 					parameters.file = this.getNodeParameter('file', i) as string;
-					parameters.sheetName = this.getNodeParameter('sheetName', i) as string;
+					if (operation === 'read_sheet' || operation === 'get_range') {
+						parameters.sheetName = this.getNodeParameter('sheetName', i) as string;
+					}
+					if (operation === 'get_range') {
+						parameters.range = this.getNodeParameter('range', i) as string;
+					}
+					if (operation === 'read_excel' || operation === 'read_sheet') {
+						parameters.includeDetectedTables = this.getNodeParameter('includeDetectedTables', i) as boolean;
+					}
 				}
 
 				// JSON to Excel
-				if (resource === 'excel_editor') {
+				if (resource === 'json_to_excel') {
 					parameters.data = JSON.parse(this.getNodeParameter('data', i) as string);
 					parameters.sheetName = this.getNodeParameter('sheetName', i) as string;
 				}
 
 				// PDF Merge
 				if (resource === 'pdf_merge') {
-					parameters.source_pdf = this.getNodeParameter('source_pdf', i) as string;
-					parameters.target_pdf = this.getNodeParameter('target_pdf', i) as string;
+					parameters.files = JSON.parse(this.getNodeParameter('files', i) as string);
 				}
 
 				// PDF Extract Page
@@ -930,14 +1051,38 @@ export class Acrewity implements INodeType {
 
 				// Email Access
 				if (resource === 'email_access') {
-					parameters.to = this.getNodeParameter('to', i) as string;
-					parameters.subject = this.getNodeParameter('subject', i) as string;
-					parameters.text = this.getNodeParameter('text', i) as string;
-					parameters.smtp_host = this.getNodeParameter('smtp_host', i) as string;
-					parameters.smtp_port = this.getNodeParameter('smtp_port', i) as number;
-					parameters.smtp_user = this.getNodeParameter('smtp_user', i) as string;
-					parameters.smtp_pass = this.getNodeParameter('smtp_pass', i) as string;
-					parameters.from = this.getNodeParameter('from', i) as string;
+					if (operation === 'send_email') {
+						parameters.to = this.getNodeParameter('to', i) as string;
+						parameters.subject = this.getNodeParameter('subject', i) as string;
+						parameters.text = this.getNodeParameter('text', i) as string;
+						parameters.smtp_host = this.getNodeParameter('smtp_host', i) as string;
+						parameters.smtp_port = this.getNodeParameter('smtp_port', i) as number;
+						parameters.smtp_user = this.getNodeParameter('smtp_user', i) as string;
+						parameters.smtp_pass = this.getNodeParameter('smtp_pass', i) as string;
+						parameters.from = this.getNodeParameter('from', i) as string;
+					}
+					if (operation === 'fetch_emails') {
+						parameters.imap_host = this.getNodeParameter('imap_host', i) as string;
+						parameters.imap_port = this.getNodeParameter('imap_port', i) as number;
+						parameters.imap_user = this.getNodeParameter('imap_user', i) as string;
+						parameters.imap_pass = this.getNodeParameter('imap_pass', i) as string;
+						parameters.folder = this.getNodeParameter('folder', i) as string;
+						parameters.limit = this.getNodeParameter('limit', i) as number;
+					}
+					if (operation === 'mark_as_read') {
+						parameters.imap_host = this.getNodeParameter('imap_host', i) as string;
+						parameters.imap_port = this.getNodeParameter('imap_port', i) as number;
+						parameters.imap_user = this.getNodeParameter('imap_user', i) as string;
+						parameters.imap_pass = this.getNodeParameter('imap_pass', i) as string;
+						parameters.email_uid = this.getNodeParameter('email_uid', i) as string;
+					}
+					if (operation === 'fetch_emails_pop3') {
+						parameters.pop3_host = this.getNodeParameter('pop3_host', i) as string;
+						parameters.pop3_port = this.getNodeParameter('pop3_port', i) as number;
+						parameters.pop3_user = this.getNodeParameter('pop3_user', i) as string;
+						parameters.pop3_pass = this.getNodeParameter('pop3_pass', i) as string;
+						parameters.limit = this.getNodeParameter('limit', i) as number;
+					}
 				}
 
 				// Make API request
