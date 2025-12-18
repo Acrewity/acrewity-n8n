@@ -43,14 +43,14 @@ export class AcrewityApi implements ICredentialType {
 			headers: {
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify({
+			body: {
 				service: 'uuid_generator',
 				operation: 'generate_uuid',
 				parameters: {
 					version: 4,
 					count: 1,
 				},
-			}),
+			},
 		},
 	};
 }
