@@ -104,4 +104,4 @@ Each API operation costs **1 credit**. Check your credit balance in the Acrewity
 
 ## License
 
-[MIT](LICENSE.md)
+[MIT](LICENSE)
