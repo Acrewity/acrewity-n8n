@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Acrewity/n8n-nodes-acrewity.git"
+    "url": "git+https://github.com/Acrewity/acrewity-n8n.git"
   },
   "scripts": {
     "build": "n8n-node build",
@@ -51,6 +51,7 @@
     ]
   },
   "devDependencies": {
+    "@n8n/eslint-plugin-community-nodes": "^0.7.0",
     "@n8n/node-cli": "*",
     "eslint": "9.32.0",
     "prettier": "3.6.2",
