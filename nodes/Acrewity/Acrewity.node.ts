@@ -15,7 +15,7 @@ export class Acrewity implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + " (" + $parameter["resource"] + ")"}}',
-		description: 'Consume the Acrewity API - 20+ utility services for data conversion, PDF processing, QR codes, and more',
+		description: 'Consume the Acrewity API - 22+ utility services for data conversion, PDF processing, QR codes, barcodes, and more',
 		defaults: {
 			name: 'Acrewity',
 		},
@@ -36,6 +36,7 @@ export class Acrewity implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
+					{ name: 'Barcode Generator', value: 'barcode_generator', description: 'Generate 1D barcodes (Code128, EAN, UPC, etc.)' },
 					{ name: 'Email', value: 'email_access', description: 'Send emails via SMTP' },
 					{ name: 'Excel to JSON', value: 'excel_to_json', description: 'Convert Excel files to JSON' },
 					{ name: 'HTML to Markdown', value: 'html_to_markdown', description: 'Convert HTML to Markdown' },
@@ -51,6 +52,7 @@ export class Acrewity implements INodeType {
 					{ name: 'PDF to Markdown', value: 'pdf_to_markdown', description: 'Convert PDF to Markdown' },
 					{ name: 'QR Code', value: 'qr_code_generator', description: 'Generate QR codes' },
 					{ name: 'Regex Matcher', value: 'regex_matcher', description: 'Match patterns in text' },
+					{ name: 'Sitemap Generator', value: 'sitemap_generator', description: 'Extract links and generate XML sitemaps' },
 					{ name: 'Text Diff', value: 'text_diff', description: 'Compare two texts' },
 					{ name: 'Timezone Converter', value: 'timezone_converter', description: 'Convert between timezones' },
 					{ name: 'URL Encoder/Decoder', value: 'url_encoder_decoder', description: 'Encode or decode URLs' },
@@ -92,6 +94,83 @@ export class Acrewity implements INodeType {
 				default: 1,
 				typeOptions: { minValue: 1, maxValue: 100 },
 				description: 'Number of UUIDs to generate',
+			},
+
+			// ============ Barcode Generator ============
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: { show: { resource: ['barcode_generator'] } },
+				options: [
+					{ name: 'Generate Barcode', value: 'generate_barcode', action: 'Generate a 1D barcode' },
+				],
+				default: 'generate_barcode',
+			},
+			{
+				displayName: 'Text/Data',
+				name: 'text',
+				type: 'string',
+				displayOptions: { show: { resource: ['barcode_generator'] } },
+				default: '',
+				required: true,
+				description: 'Text or numbers to encode in the barcode',
+			},
+			{
+				displayName: 'Barcode Format',
+				name: 'barcodeFormat',
+				type: 'options',
+				displayOptions: { show: { resource: ['barcode_generator'] } },
+				options: [
+					{ name: 'Code 128', value: 'CODE128' },
+					{ name: 'EAN-13', value: 'EAN13' },
+					{ name: 'EAN-8', value: 'EAN8' },
+					{ name: 'UPC-A', value: 'UPC' },
+					{ name: 'Code 39', value: 'CODE39' },
+					{ name: 'ITF-14', value: 'ITF14' },
+					{ name: 'Codabar', value: 'codabar' },
+				],
+				default: 'CODE128',
+				description: 'The barcode format/type to generate',
+			},
+			{
+				displayName: 'Bar Width',
+				name: 'barcodeWidth',
+				type: 'number',
+				displayOptions: { show: { resource: ['barcode_generator'] } },
+				default: 2,
+				typeOptions: { minValue: 1, maxValue: 4 },
+				description: 'Bar width multiplier (1-4)',
+			},
+			{
+				displayName: 'Height',
+				name: 'barcodeHeight',
+				type: 'number',
+				displayOptions: { show: { resource: ['barcode_generator'] } },
+				default: 100,
+				typeOptions: { minValue: 50, maxValue: 300 },
+				description: 'Barcode height in pixels (50-300)',
+			},
+			{
+				displayName: 'Display Value',
+				name: 'displayValue',
+				type: 'boolean',
+				displayOptions: { show: { resource: ['barcode_generator'] } },
+				default: true,
+				description: 'Whether to show the text below the barcode',
+			},
+			{
+				displayName: 'Output Format',
+				name: 'outputFormat',
+				type: 'options',
+				displayOptions: { show: { resource: ['barcode_generator'] } },
+				options: [
+					{ name: 'PNG', value: 'png' },
+					{ name: 'SVG', value: 'svg' },
+				],
+				default: 'png',
+				description: 'Output image format',
 			},
 
 			// ============ Regex Matcher ============
@@ -301,6 +380,93 @@ export class Acrewity implements INodeType {
 				description: 'Size of the QR code in pixels',
 			},
 
+			// ============ Sitemap Generator ============
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: { show: { resource: ['sitemap_generator'] } },
+				options: [
+					{ name: 'Extract Links', value: 'extract_links', action: 'Extract links from a web page' },
+					{ name: 'Generate Sitemap', value: 'generate_sitemap', action: 'Generate XML sitemap from URLs' },
+				],
+				default: 'extract_links',
+			},
+			// Extract Links parameters
+			{
+				displayName: 'URL',
+				name: 'url',
+				type: 'string',
+				displayOptions: { show: { resource: ['sitemap_generator'], operation: ['extract_links'] } },
+				default: '',
+				required: true,
+				placeholder: 'https://example.com',
+				description: 'URL of the page to extract links from',
+			},
+			{
+				displayName: 'Same Domain Only',
+				name: 'sameDomainOnly',
+				type: 'boolean',
+				displayOptions: { show: { resource: ['sitemap_generator'], operation: ['extract_links'] } },
+				default: true,
+				description: 'Whether to only return links from the same domain',
+			},
+			{
+				displayName: 'Limit',
+				name: 'linkLimit',
+				type: 'number',
+				displayOptions: { show: { resource: ['sitemap_generator'], operation: ['extract_links'] } },
+				default: 100,
+				typeOptions: { minValue: 1, maxValue: 100 },
+				description: 'Maximum number of links to return (1-100)',
+			},
+			// Generate Sitemap parameters
+			{
+				displayName: 'URLs (JSON Array)',
+				name: 'urls',
+				type: 'string',
+				typeOptions: { rows: 4 },
+				displayOptions: { show: { resource: ['sitemap_generator'], operation: ['generate_sitemap'] } },
+				default: '["https://example.com", "https://example.com/about"]',
+				required: true,
+				description: 'JSON array of URLs to include in the sitemap',
+			},
+			{
+				displayName: 'Change Frequency',
+				name: 'changefreq',
+				type: 'options',
+				displayOptions: { show: { resource: ['sitemap_generator'], operation: ['generate_sitemap'] } },
+				options: [
+					{ name: 'Always', value: 'always' },
+					{ name: 'Hourly', value: 'hourly' },
+					{ name: 'Daily', value: 'daily' },
+					{ name: 'Weekly', value: 'weekly' },
+					{ name: 'Monthly', value: 'monthly' },
+					{ name: 'Yearly', value: 'yearly' },
+					{ name: 'Never', value: 'never' },
+				],
+				default: 'weekly',
+				description: 'How frequently the pages change',
+			},
+			{
+				displayName: 'Priority',
+				name: 'priority',
+				type: 'number',
+				displayOptions: { show: { resource: ['sitemap_generator'], operation: ['generate_sitemap'] } },
+				default: 0.5,
+				typeOptions: { minValue: 0, maxValue: 1, numberPrecision: 1 },
+				description: 'Default priority for all URLs (0.0-1.0)',
+			},
+			{
+				displayName: 'Include Last Modified',
+				name: 'includeLastmod',
+				type: 'boolean',
+				displayOptions: { show: { resource: ['sitemap_generator'], operation: ['generate_sitemap'] } },
+				default: true,
+				description: 'Whether to include last modification date',
+			},
+
 			// ============ Markdown Table Generator ============
 			{
 				displayName: 'Operation',
@@ -491,18 +657,40 @@ export class Acrewity implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['image_converter'] } },
 				options: [
-					{ name: 'Convert Image', value: 'convert', action: 'Convert image format' },
+					{ name: 'Convert Image', value: 'convert_image', action: 'Convert image format' },
 				],
-				default: 'convert',
+				default: 'convert_image',
+			},
+			{
+				displayName: 'Image Source',
+				name: 'imageSource',
+				type: 'options',
+				displayOptions: { show: { resource: ['image_converter'] } },
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'Base64 Data', value: 'base64' },
+				],
+				default: 'url',
+				description: 'How to provide the image',
 			},
 			{
 				displayName: 'Image URL',
 				name: 'imageUrl',
 				type: 'string',
-				displayOptions: { show: { resource: ['image_converter'] } },
+				displayOptions: { show: { resource: ['image_converter'], imageSource: ['url'] } },
 				default: '',
 				required: true,
 				description: 'URL of the image to convert',
+			},
+			{
+				displayName: 'Image Data (Base64)',
+				name: 'imageData',
+				type: 'string',
+				typeOptions: { rows: 4 },
+				displayOptions: { show: { resource: ['image_converter'], imageSource: ['base64'] } },
+				default: '',
+				required: true,
+				description: 'Base64 encoded image data (with or without data URI prefix)',
 			},
 			{
 				displayName: 'Output Format',
@@ -511,8 +699,12 @@ export class Acrewity implements INodeType {
 				displayOptions: { show: { resource: ['image_converter'] } },
 				options: [
 					{ name: 'JPEG', value: 'jpeg' },
+					{ name: 'JPG', value: 'jpg' },
 					{ name: 'PNG', value: 'png' },
 					{ name: 'WebP', value: 'webp' },
+					{ name: 'GIF', value: 'gif' },
+					{ name: 'BMP', value: 'bmp' },
+					{ name: 'TIFF', value: 'tiff' },
 					{ name: 'ICO', value: 'ico' },
 				],
 				default: 'jpeg',
@@ -521,10 +713,10 @@ export class Acrewity implements INodeType {
 				displayName: 'Quality',
 				name: 'quality',
 				type: 'number',
-				displayOptions: { show: { resource: ['image_converter'], format: ['jpeg', 'png', 'webp'] } },
+				displayOptions: { show: { resource: ['image_converter'], format: ['jpeg', 'jpg', 'png', 'webp'] } },
 				default: 85,
 				typeOptions: { minValue: 1, maxValue: 100 },
-				description: 'Output quality (1-100). Does not apply to ICO format.',
+				description: 'Output quality (1-100). Applies to JPEG, PNG, and WebP formats.',
 			},
 			{
 				displayName: 'Width',
@@ -532,8 +724,8 @@ export class Acrewity implements INodeType {
 				type: 'number',
 				displayOptions: { show: { resource: ['image_converter'] } },
 				default: 0,
-				typeOptions: { minValue: 0 },
-				description: 'Output width in pixels (0 = keep original)',
+				typeOptions: { minValue: 0, maxValue: 10000 },
+				description: 'Output width in pixels (0 = keep original, max 10000)',
 			},
 			{
 				displayName: 'Height',
@@ -541,8 +733,8 @@ export class Acrewity implements INodeType {
 				type: 'number',
 				displayOptions: { show: { resource: ['image_converter'] } },
 				default: 0,
-				typeOptions: { minValue: 0 },
-				description: 'Output height in pixels (0 = keep original)',
+				typeOptions: { minValue: 0, maxValue: 10000 },
+				description: 'Output height in pixels (0 = keep original, max 10000)',
 			},
 
 			// ============ Excel to JSON ============
@@ -947,6 +1139,31 @@ export class Acrewity implements INodeType {
 					parameters.count = this.getNodeParameter('count', i) as number;
 				}
 
+				// Barcode Generator
+				if (resource === 'barcode_generator') {
+					parameters.text = this.getNodeParameter('text', i) as string;
+					parameters.format = this.getNodeParameter('barcodeFormat', i) as string;
+					parameters.width = this.getNodeParameter('barcodeWidth', i) as number;
+					parameters.height = this.getNodeParameter('barcodeHeight', i) as number;
+					parameters.displayValue = this.getNodeParameter('displayValue', i) as boolean;
+					parameters.output_format = this.getNodeParameter('outputFormat', i) as string;
+				}
+
+				// Sitemap Generator
+				if (resource === 'sitemap_generator') {
+					if (operation === 'extract_links') {
+						parameters.url = this.getNodeParameter('url', i) as string;
+						parameters.same_domain_only = this.getNodeParameter('sameDomainOnly', i) as boolean;
+						parameters.limit = this.getNodeParameter('linkLimit', i) as number;
+					}
+					if (operation === 'generate_sitemap') {
+						parameters.urls = JSON.parse(this.getNodeParameter('urls', i) as string);
+						parameters.changefreq = this.getNodeParameter('changefreq', i) as string;
+						parameters.priority = this.getNodeParameter('priority', i) as number;
+						parameters.include_lastmod = this.getNodeParameter('includeLastmod', i) as boolean;
+					}
+				}
+
 				// Regex Matcher
 				if (resource === 'regex_matcher') {
 					parameters.text = this.getNodeParameter('text', i) as string;
@@ -1019,10 +1236,16 @@ export class Acrewity implements INodeType {
 
 				// Image Converter
 				if (resource === 'image_converter') {
-					parameters.imageUrl = this.getNodeParameter('imageUrl', i) as string;
+					const imageSource = this.getNodeParameter('imageSource', i) as string;
+					if (imageSource === 'url') {
+						parameters.imageUrl = this.getNodeParameter('imageUrl', i) as string;
+					} else {
+						parameters.imageData = this.getNodeParameter('imageData', i) as string;
+					}
 					parameters.format = this.getNodeParameter('format', i) as string;
-					// Quality only applies to non-ICO formats
-					if (parameters.format !== 'ico') {
+					// Quality only applies to certain formats
+					const qualityFormats = ['jpeg', 'jpg', 'png', 'webp'];
+					if (qualityFormats.includes(parameters.format as string)) {
 						parameters.quality = this.getNodeParameter('quality', i) as number;
 					}
 					const width = this.getNodeParameter('width', i) as number;
@@ -1116,6 +1339,9 @@ export class Acrewity implements INodeType {
 				}
 
 				// Make API request
+				// Convert resource name to API service name (underscore to hyphen)
+				const serviceName = resource.replace(/_/g, '-');
+
 				const response = await this.helpers.httpRequest({
 					method: 'POST' as IHttpRequestMethods,
 					url: 'https://www.acrewity.com/api/services/execute',
@@ -1124,7 +1350,7 @@ export class Acrewity implements INodeType {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
 					body: {
-						service: resource,
+						service: serviceName,
 						operation,
 						parameters,
 					},
