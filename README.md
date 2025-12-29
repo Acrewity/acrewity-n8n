@@ -1,6 +1,6 @@
 # n8n-nodes-acrewity
 
-This is an n8n community node for [Acrewity](https://acrewity.com) - a unified API platform with 20+ utility services.
+This is an n8n community node for [Acrewity](https://acrewity.com) - a unified API platform with 22+ utility services.
 
 ## Features
 
@@ -22,10 +22,12 @@ This node provides access to all Acrewity API services:
 
 ### Document Generation
 - **QR Code Generator** - Generate QR codes (PNG/SVG)
+- **Barcode Generator** - Generate 1D barcodes (Code128, EAN-13, EAN-8, UPC, Code39, ITF-14, Codabar)
 - **Markdown Table Generator** - Create formatted Markdown tables
+- **Sitemap Generator** - Extract links from web pages and generate XML sitemaps
 
 ### File Conversion
-- **Image Converter** - Convert between JPEG, PNG, WebP
+- **Image Converter** - Convert between JPEG, PNG, WebP, BMP, GIF, ICO, TIFF
 - **Excel to JSON** - Parse Excel files to JSON
 - **JSON to Excel** - Create Excel files from JSON data
 
@@ -36,7 +38,7 @@ This node provides access to all Acrewity API services:
 - **PDF to Markdown** - Convert PDFs to Markdown
 
 ### Communication
-- **Email Access** - Send emails via SMTP
+- **Email Access** - Send emails via SMTP, fetch emails via IMAP/POP3, mark as read
 
 ## Installation
 
