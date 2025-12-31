@@ -29,7 +29,7 @@ This node provides access to all Acrewity API services:
 ### File Conversion
 - **Image Converter** - Convert between JPEG, PNG, WebP, BMP, GIF, ICO, TIFF
 - **Excel to JSON** - Parse Excel files to JSON
-- **JSON to Excel** - Create Excel files from JSON data
+- **JSON to Excel** - Create Excel files from JSON (single or multi-sheet, with cell positioning and formula support)
 
 ### PDF Operations
 - **PDF Merge** - Combine multiple PDF files

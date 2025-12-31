@@ -797,15 +797,17 @@ export class Acrewity implements INodeType {
 				displayOptions: { show: { resource: ['json_to_excel'] } },
 				options: [
 					{ name: 'Create Excel', value: 'create_excel', action: 'Create excel from json' },
+					{ name: 'Create Multi-Sheet Excel', value: 'create_multi_sheet', action: 'Create excel with multiple sheets' },
 				],
 				default: 'create_excel',
 			},
+			// Single sheet parameters
 			{
 				displayName: 'Data (JSON Array)',
 				name: 'data',
 				type: 'string',
 				typeOptions: { rows: 6 },
-				displayOptions: { show: { resource: ['json_to_excel'] } },
+				displayOptions: { show: { resource: ['json_to_excel'], operation: ['create_excel'] } },
 				default: '[{"Name": "John", "Email": "john@example.com"}]',
 				required: true,
 				description: 'JSON array of objects to convert to Excel',
@@ -814,9 +816,44 @@ export class Acrewity implements INodeType {
 				displayName: 'Sheet Name',
 				name: 'sheetName',
 				type: 'string',
-				displayOptions: { show: { resource: ['json_to_excel'] } },
+				displayOptions: { show: { resource: ['json_to_excel'], operation: ['create_excel'] } },
 				default: 'Sheet1',
 				description: 'Name of the Excel sheet',
+			},
+			// Multi-sheet parameters
+			{
+				displayName: 'Sheets (JSON Object)',
+				name: 'sheets',
+				type: 'string',
+				typeOptions: { rows: 10 },
+				displayOptions: { show: { resource: ['json_to_excel'], operation: ['create_multi_sheet'] } },
+				default: '{\n  "Sheet1": [{"Name": "John", "Age": 30}],\n  "Sheet2": [{"Product": "A", "Price": 100}]\n}',
+				required: true,
+				description: 'JSON object with sheet names as keys. Values can be arrays of objects, or output from excel-to-json (detectedTable or cells format)',
+			},
+			{
+				displayName: 'Include Headers',
+				name: 'headers',
+				type: 'boolean',
+				displayOptions: { show: { resource: ['json_to_excel'] } },
+				default: true,
+				description: 'Whether to include headers row from object keys',
+			},
+			{
+				displayName: 'Use Cells',
+				name: 'useCells',
+				type: 'boolean',
+				displayOptions: { show: { resource: ['json_to_excel'], operation: ['create_multi_sheet'] } },
+				default: false,
+				description: 'Whether to use raw cell data (preserves exact cell positions). Requires sheets to have "cells" property.',
+			},
+			{
+				displayName: 'Preserve Formulas',
+				name: 'preserveFormulas',
+				type: 'boolean',
+				displayOptions: { show: { resource: ['json_to_excel'], operation: ['create_multi_sheet'], useCells: [true] } },
+				default: false,
+				description: 'Whether to preserve Excel formulas when using cells mode',
 			},
 
 			// ============ PDF Merge ============
@@ -1274,8 +1311,19 @@ export class Acrewity implements INodeType {
 
 				// JSON to Excel
 				if (resource === 'json_to_excel') {
-					parameters.data = JSON.parse(this.getNodeParameter('data', i) as string);
-					parameters.sheetName = this.getNodeParameter('sheetName', i) as string;
+					if (operation === 'create_excel') {
+						parameters.data = JSON.parse(this.getNodeParameter('data', i) as string);
+						parameters.sheetName = this.getNodeParameter('sheetName', i) as string;
+						parameters.headers = this.getNodeParameter('headers', i) as boolean;
+					}
+					if (operation === 'create_multi_sheet') {
+						parameters.sheets = JSON.parse(this.getNodeParameter('sheets', i) as string);
+						parameters.headers = this.getNodeParameter('headers', i) as boolean;
+						parameters.useCells = this.getNodeParameter('useCells', i) as boolean;
+						if (parameters.useCells) {
+							parameters.preserveFormulas = this.getNodeParameter('preserveFormulas', i) as boolean;
+						}
+					}
 				}
 
 				// PDF Merge
