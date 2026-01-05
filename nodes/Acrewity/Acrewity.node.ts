@@ -1194,7 +1194,8 @@ export class Acrewity implements INodeType {
 						parameters.limit = this.getNodeParameter('linkLimit', i) as number;
 					}
 					if (operation === 'generate_sitemap') {
-						parameters.urls = JSON.parse(this.getNodeParameter('urls', i) as string);
+						const urlsParam = this.getNodeParameter('urls', i);
+						parameters.urls = typeof urlsParam === 'string' ? JSON.parse(urlsParam) : urlsParam;
 						parameters.changefreq = this.getNodeParameter('changefreq', i) as string;
 						parameters.priority = this.getNodeParameter('priority', i) as number;
 						parameters.include_lastmod = this.getNodeParameter('includeLastmod', i) as boolean;
@@ -1236,14 +1237,18 @@ export class Acrewity implements INodeType {
 
 				// Markdown Table Generator
 				if (resource === 'markdown_table_generator') {
-					parameters.headers = JSON.parse(this.getNodeParameter('headers', i) as string);
-					parameters.rows = JSON.parse(this.getNodeParameter('rows', i) as string);
+					const headersParam = this.getNodeParameter('headers', i);
+					const rowsParam = this.getNodeParameter('rows', i);
+					parameters.headers = typeof headersParam === 'string' ? JSON.parse(headersParam) : headersParam;
+					parameters.rows = typeof rowsParam === 'string' ? JSON.parse(rowsParam) : rowsParam;
 				}
 
 				// JSON Schema Validator
 				if (resource === 'json_schema_validator') {
-					parameters.data = JSON.parse(this.getNodeParameter('data', i) as string);
-					parameters.schema = JSON.parse(this.getNodeParameter('schema', i) as string);
+					const dataParam = this.getNodeParameter('data', i);
+					const schemaParam = this.getNodeParameter('schema', i);
+					parameters.data = typeof dataParam === 'string' ? JSON.parse(dataParam) : dataParam;
+					parameters.schema = typeof schemaParam === 'string' ? JSON.parse(schemaParam) : schemaParam;
 				}
 
 				// URL to Markdown
@@ -1312,12 +1317,14 @@ export class Acrewity implements INodeType {
 				// JSON to Excel
 				if (resource === 'json_to_excel') {
 					if (operation === 'create_excel') {
-						parameters.data = JSON.parse(this.getNodeParameter('data', i) as string);
+						const dataParam = this.getNodeParameter('data', i);
+						parameters.data = typeof dataParam === 'string' ? JSON.parse(dataParam) : dataParam;
 						parameters.sheetName = this.getNodeParameter('sheetName', i) as string;
 						parameters.headers = this.getNodeParameter('headers', i) as boolean;
 					}
 					if (operation === 'create_multi_sheet') {
-						parameters.sheets = JSON.parse(this.getNodeParameter('sheets', i) as string);
+						const sheetsParam = this.getNodeParameter('sheets', i);
+						parameters.sheets = typeof sheetsParam === 'string' ? JSON.parse(sheetsParam) : sheetsParam;
 						parameters.headers = this.getNodeParameter('headers', i) as boolean;
 						parameters.useCells = this.getNodeParameter('useCells', i) as boolean;
 						if (parameters.useCells) {
@@ -1328,7 +1335,8 @@ export class Acrewity implements INodeType {
 
 				// PDF Merge
 				if (resource === 'pdf_merge') {
-					parameters.files = JSON.parse(this.getNodeParameter('files', i) as string);
+					const filesParam = this.getNodeParameter('files', i);
+					parameters.files = typeof filesParam === 'string' ? JSON.parse(filesParam) : filesParam;
 				}
 
 				// PDF Extract Page
