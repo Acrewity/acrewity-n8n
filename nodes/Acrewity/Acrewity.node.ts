@@ -829,7 +829,7 @@ export class Acrewity implements INodeType {
 				displayOptions: { show: { resource: ['json_to_excel'], operation: ['create_multi_sheet'] } },
 				default: '{\n  "Sheet1": [{"Name": "John", "Age": 30}],\n  "Sheet2": [{"Product": "A", "Price": 100}]\n}',
 				required: true,
-				description: 'JSON object with sheet names as keys. Values can be arrays of objects, or output from excel-to-json (detectedTable or cells format)',
+				description: 'JSON object with sheet names as keys. Values can be arrays of objects, or output from excel-to-JSON (detectedTable or cells format).',
 			},
 			{
 				displayName: 'Include Headers',
