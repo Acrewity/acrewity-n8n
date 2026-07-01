@@ -1158,6 +1158,13 @@ export class Acrewity implements INodeType {
 
 			// ============ Email Access ============
 			{
+				displayName: '⚠️ Credential Notice: The email server credentials you enter below (hostname, username, and password) are transmitted to and processed by Acrewity\'s servers to perform the email operation on your behalf. Acrewity does not store these credentials after the request completes. See <a href="https://acrewity.com/privacy" target="_blank">acrewity.com/privacy</a> for details.',
+				name: 'emailCredentialNotice',
+				type: 'notice',
+				displayOptions: { show: { resource: ['email_access'] } },
+				default: '',
+			},
+			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
