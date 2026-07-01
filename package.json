@@ -1,6 +1,6 @@
 {
   "name": "@acrewity/n8n-nodes-acrewity",
-  "version": "0.1.16",
+  "version": "0.2.0",
   "description": "n8n community node for Acrewity API - A unified API platform with 22+ utility services including PDF processing, data conversion, QR codes, barcodes, and more",
   "license": "MIT",
   "homepage": "https://acrewity.com",
@@ -51,11 +51,13 @@
     ]
   },
   "devDependencies": {
+    "@langchain/core": "^1.2.1",
     "@n8n/eslint-plugin-community-nodes": "^0.7.0",
     "@n8n/node-cli": "*",
     "eslint": "9.32.0",
     "prettier": "3.6.2",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "n8n-workflow": "*"

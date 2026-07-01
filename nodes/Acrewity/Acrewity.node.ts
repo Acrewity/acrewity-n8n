@@ -1,11 +1,201 @@
 import type {
 	IExecuteFunctions,
+	ISupplyDataFunctions,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
 	IHttpRequestMethods,
+	SupplyData,
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
+
+const TOOL_SCHEMAS: Record<string, {
+	description: string;
+	params: Record<string, { type: 'string' | 'number' | 'boolean'; description: string; required: boolean }>;
+}> = {
+	'uuid_generator:generate_uuid': {
+		description: 'Generate one or more random UUIDs',
+		params: {
+			version: { type: 'string', description: 'UUID version: v1 (time-based) or v4 (random)', required: false },
+			count: { type: 'number', description: 'Number of UUIDs to generate (1-100)', required: false },
+		},
+	},
+	'qr_code_generator:generate': {
+		description: 'Generate a QR code image from any text or URL',
+		params: {
+			text: { type: 'string', description: 'The text or URL to encode in the QR code', required: true },
+			format: { type: 'string', description: 'Output format: png or svg', required: false },
+			size: { type: 'number', description: 'QR code size in pixels (100-1000)', required: false },
+		},
+	},
+	'barcode_generator:generate_barcode': {
+		description: 'Generate a 1D barcode image (Code128, EAN, UPC, etc.)',
+		params: {
+			text: { type: 'string', description: 'Text or numbers to encode in the barcode', required: true },
+			format: { type: 'string', description: 'Barcode format: CODE128, EAN13, EAN8, UPC, CODE39, ITF14, codabar', required: false },
+			output_format: { type: 'string', description: 'Output image format: png or svg', required: false },
+		},
+	},
+	'regex_matcher:match_pattern': {
+		description: 'Match a regex pattern against text and return all matches',
+		params: {
+			text: { type: 'string', description: 'The text to search in', required: true },
+			pattern: { type: 'string', description: 'The regex pattern to match', required: true },
+			flags: { type: 'string', description: 'Regex flags: g (global), i (case-insensitive), m (multiline)', required: false },
+		},
+	},
+	'text_diff:compare_text': {
+		description: 'Compare two texts and return a line-by-line diff showing additions and deletions',
+		params: {
+			text1: { type: 'string', description: 'The original text', required: true },
+			text2: { type: 'string', description: 'The modified text to compare against', required: true },
+			format: { type: 'string', description: 'Output format: unified or json', required: false },
+		},
+	},
+	'url_encoder_decoder:encode': {
+		description: 'URL-encode a string (percent-encoding)',
+		params: {
+			text: { type: 'string', description: 'The text to URL-encode', required: true },
+		},
+	},
+	'url_encoder_decoder:decode': {
+		description: 'URL-decode a percent-encoded string',
+		params: {
+			text: { type: 'string', description: 'The URL-encoded text to decode', required: true },
+		},
+	},
+	'timezone_converter:convert_timezone': {
+		description: 'Convert a datetime from one timezone to another',
+		params: {
+			datetime: { type: 'string', description: 'Datetime to convert (e.g. 2025-10-23T12:00:00)', required: true },
+			fromTimezone: { type: 'string', description: 'Source timezone: UTC, EST, PST, GMT, CET, CST, MST, JST, AEST', required: true },
+			toTimezone: { type: 'string', description: 'Target timezone: UTC, EST, PST, GMT, CET, CST, MST, JST, AEST', required: true },
+		},
+	},
+	'markdown_table_generator:generate_table': {
+		description: 'Generate a Markdown table from headers and rows',
+		params: {
+			headers: { type: 'string', description: 'JSON array of column headers, e.g. ["Name","Age","Email"]', required: true },
+			rows: { type: 'string', description: 'JSON array of row arrays, e.g. [["Alice",30,"a@b.com"],["Bob",25,"b@c.com"]]', required: true },
+		},
+	},
+	'json_schema_validator:validate_json': {
+		description: 'Validate a JSON object against a JSON Schema',
+		params: {
+			data: { type: 'string', description: 'The JSON data to validate as a JSON string', required: true },
+			schema: { type: 'string', description: 'The JSON Schema to validate against as a JSON string', required: true },
+		},
+	},
+	'url_to_markdown:url_to_markdown': {
+		description: 'Fetch a web page and convert its content to clean Markdown text',
+		params: {
+			url: { type: 'string', description: 'The full URL of the web page to fetch and convert', required: true },
+		},
+	},
+	'html_to_pdf:convert': {
+		description: 'Convert an HTML document to a PDF file',
+		params: {
+			html: { type: 'string', description: 'Complete HTML document to convert (include full <html><head><body> structure with inline CSS)', required: true },
+		},
+	},
+	'html_to_markdown:convert': {
+		description: 'Convert HTML content to Markdown text',
+		params: {
+			content: { type: 'string', description: 'The HTML content to convert', required: true },
+			preserve_tables: { type: 'boolean', description: 'Whether to preserve table formatting (default: true)', required: false },
+		},
+	},
+	'markdown_to_html:convert': {
+		description: 'Convert Markdown content to a full styled HTML document',
+		params: {
+			content: { type: 'string', description: 'The Markdown content to convert', required: true },
+			include_styles: { type: 'boolean', description: 'Whether to include CSS styles in the output', required: false },
+			highlight_code: { type: 'boolean', description: 'Whether to add syntax highlighting to code blocks', required: false },
+		},
+	},
+	'markdown_to_html:fragment': {
+		description: 'Convert Markdown content to an HTML fragment (no full document wrapper)',
+		params: {
+			content: { type: 'string', description: 'The Markdown content to convert', required: true },
+		},
+	},
+	'image_converter:convert_image': {
+		description: 'Convert an image to a different format',
+		params: {
+			imageUrl: { type: 'string', description: 'URL of the source image to convert (provide this or imageData)', required: false },
+			imageData: { type: 'string', description: 'Base64-encoded image data (alternative to imageUrl)', required: false },
+			format: { type: 'string', description: 'Output format: jpeg, jpg, png, webp, gif, bmp, tiff, ico', required: true },
+			quality: { type: 'number', description: 'Output quality 1-100 (for jpeg, png, webp)', required: false },
+			width: { type: 'number', description: 'Output width in pixels (0 = keep original)', required: false },
+			height: { type: 'number', description: 'Output height in pixels (0 = keep original)', required: false },
+		},
+	},
+	'json_to_excel:create_excel': {
+		description: 'Convert a JSON array of objects to a single-sheet Excel spreadsheet',
+		params: {
+			data: { type: 'string', description: 'JSON array of objects to convert, e.g. [{"Name":"Alice","Score":95}]', required: true },
+			sheetName: { type: 'string', description: 'Name for the Excel sheet tab (default: Sheet1)', required: false },
+		},
+	},
+	'json_to_excel:create_multi_sheet': {
+		description: 'Create an Excel file with multiple sheets from JSON data',
+		params: {
+			sheets: { type: 'string', description: 'JSON object with sheet names as keys and arrays of row objects as values, e.g. {"Sheet1":[{"Name":"Alice"}]}', required: true },
+		},
+	},
+	'sitemap_generator:extract_links': {
+		description: 'Extract all links from a web page',
+		params: {
+			url: { type: 'string', description: 'URL of the page to extract links from', required: true },
+		},
+	},
+	'sitemap_generator:generate_sitemap': {
+		description: 'Generate an XML sitemap from a list of URLs',
+		params: {
+			urls: { type: 'string', description: 'JSON array of URLs to include in the sitemap, e.g. ["https://example.com","https://example.com/about"]', required: true },
+			changefreq: { type: 'string', description: 'How frequently pages change: always, hourly, daily, weekly, monthly, yearly, never', required: false },
+			priority: { type: 'number', description: 'Default URL priority 0.0-1.0', required: false },
+		},
+	},
+	'pdf_to_markdown:convert': {
+		description: 'Convert a Base64-encoded PDF file to Markdown text',
+		params: {
+			base64_data: { type: 'string', description: 'Base64-encoded PDF file content', required: true },
+		},
+	},
+	'pdf_to_html:convert': {
+		description: 'Convert a Base64-encoded PDF file to HTML',
+		params: {
+			base64_data: { type: 'string', description: 'Base64-encoded PDF file content', required: true },
+			include_styles: { type: 'boolean', description: 'Whether to include CSS styles in the output', required: false },
+		},
+	},
+	'pdf_merge:merge': {
+		description: 'Merge multiple PDF files into one',
+		params: {
+			files: { type: 'string', description: 'JSON array of Base64-encoded PDF files to merge', required: true },
+		},
+	},
+	'excel_to_json:read_excel': {
+		description: 'Read an Excel file and convert all sheets to JSON',
+		params: {
+			file: { type: 'string', description: 'Base64-encoded Excel file content', required: true },
+		},
+	},
+	'email_access:send_email': {
+		description: 'Send an email via SMTP',
+		params: {
+			to: { type: 'string', description: 'Recipient email address', required: true },
+			subject: { type: 'string', description: 'Email subject', required: true },
+			text: { type: 'string', description: 'Plain text email body', required: true },
+			smtp_host: { type: 'string', description: 'SMTP server hostname (e.g. smtp.gmail.com)', required: true },
+			smtp_port: { type: 'number', description: 'SMTP server port (typically 587)', required: true },
+			smtp_user: { type: 'string', description: 'SMTP username/email', required: true },
+			smtp_pass: { type: 'string', description: 'SMTP password', required: true },
+			from: { type: 'string', description: 'Sender email address', required: true },
+		},
+	},
+};
 
 export class Acrewity implements INodeType {
 	description: INodeTypeDescription = {
@@ -1430,5 +1620,73 @@ export class Acrewity implements INodeType {
 		}
 
 		return [returnData];
+	}
+
+	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {
+		const { DynamicStructuredTool } = await import('@langchain/core/tools');
+		const { z } = await import('zod');
+
+		const credentials = await this.getCredentials('acrewityApi');
+		const resource = this.getNodeParameter('resource', itemIndex) as string;
+		const operation = this.getNodeParameter('operation', itemIndex) as string;
+		const key = `${resource}:${operation}`;
+		const toolDef = TOOL_SCHEMAS[key];
+
+		if (!toolDef) {
+			throw new NodeOperationError(
+				this.getNode(),
+				`No AI tool schema defined for ${resource}/${operation}. Configure the node with a supported resource and operation.`,
+			);
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const schemaShape: Record<string, any> = {};
+		for (const [paramName, paramDef] of Object.entries(toolDef.params)) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			let field: any;
+			if (paramDef.type === 'number') field = z.number().describe(paramDef.description);
+			else if (paramDef.type === 'boolean') field = z.boolean().describe(paramDef.description);
+			else field = z.string().describe(paramDef.description);
+			schemaShape[paramName] = paramDef.required ? field : field.optional();
+		}
+
+		const rawName = this.getNode().name;
+		const toolName = rawName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase().replace(/^_+|_+$/g, '') || resource;
+
+		const tool = new DynamicStructuredTool({
+			name: toolName,
+			description: toolDef.description,
+			schema: z.object(schemaShape),
+			func: async (params: Record<string, unknown>) => {
+				try {
+					const serviceName = resource.replace(/_/g, '-');
+					const JSON_PARSE_FIELDS = new Set(['data', 'schema', 'headers', 'rows', 'sheets', 'files', 'urls']);
+					const processedParams: Record<string, unknown> = {};
+					for (const [k, v] of Object.entries(params)) {
+						if (v === undefined || v === null) continue;
+						if (JSON_PARSE_FIELDS.has(k) && typeof v === 'string') {
+							try { processedParams[k] = JSON.parse(v); } catch { processedParams[k] = v; }
+						} else {
+							processedParams[k] = v;
+						}
+					}
+					const response = await this.helpers.httpRequest({
+						method: 'POST' as IHttpRequestMethods,
+						url: 'https://www.acrewity.com/api/services/execute',
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bearer ${credentials.apiKey as string}`,
+						},
+						body: { service: serviceName, operation, parameters: processedParams },
+						json: true,
+					});
+					return JSON.stringify(response);
+				} catch (error) {
+					return `Error: ${(error as Error).message}`;
+				}
+			},
+		});
+
+		return { response: tool };
 	}
 }
